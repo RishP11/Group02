@@ -28,9 +28,7 @@ The board interfaces with the microcontroller using two signal pins, `Trig` and 
 3. Once received, check the elapsed time.
 4. Calculate the distance using the formula:
 
-    \[
-    \text{distance} (d) = \text{speed} (s) \times \text{time elapsed} (t)
-    \]
+    $\text{distance} (d) = \text{speed} (s) \times \text{time elapsed} (t)$
 
    where  
    - \( d \) is the distance traversed by the pulse (i.e., twice the required distance).
