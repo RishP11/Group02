@@ -35,7 +35,7 @@ The board interfaces with the microcontroller using two signal pins, `Trig` and 
    - $s$ is the speed of sound, approximately 343 m/s at $20^\degree$.
 
 5. This yields the required distance.
-
+![Distance calculation diagram](Images/exp01.svg)
 ### Project Plan
 
 - Use the **TI TM4C1236GH6PM microcontroller** to read and operate two ultrasonic sensors.
