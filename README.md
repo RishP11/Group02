@@ -6,6 +6,13 @@
 2. Rishabh Pomaje - 210020036  
 
 ---
+### Project Plan
+
+- Use the **TI TM4C123GH6PM microcontroller** to read and operate two ultrasonic sensors.
+- Output the distance readings to the PC via serial UART.
+- Blink an onboard LED at a frequency inversely proportional to the distance to the obstacle.
+- We will be simultaneously using two sensors, corresponding to the front and rear sensors in a car.
+---
 
 ## Project Description
 
@@ -36,13 +43,7 @@ The board interfaces with the microcontroller using two signal pins, `Trig` and 
 
 5. This yields the required distance.
 ![Distance calculation diagram](Images/exp01.svg)
-### Project Plan
 
-- Use the **TI TM4C123GH6PM microcontroller** to read and operate two ultrasonic sensors.
-- Output the distance readings to the PC via serial UART.
-- Blink an onboard LED at a frequency inversely proportional to the distance to the obstacle.
-- We will be simultaneously using two sensors, corresponding to the front and rear sensors in a car.
----
 
 ## System Block Diagrams
 
