@@ -51,7 +51,7 @@ The board interfaces with the microcontroller using two signal pins, `Trig` and 
 ![Hardware Block Diagram](Images/hardware_bl.svg)
 
 ### Software Block Diagram
-_Coming soon..._
+![Software Block Diagram](Images/software.svg)
 
 ---
 
