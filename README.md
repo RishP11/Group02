@@ -68,3 +68,5 @@ _Coming soon..._
 | Date       | Milestone                |
 |------------|--------------------------|
 | 29/10/2024 | Initial plan formulation |
+
+Next Target: Getting the USs working with Tiva.
