@@ -41,7 +41,7 @@ The board interfaces with the microcontroller using two signal pins, `Trig` and 
 - Use the **TI TM4C1236GH6PM microcontroller** to read and operate two ultrasonic sensors.
 - Output the distance readings to the PC via serial UART.
 - Blink an onboard LED at a frequency inversely proportional to the distance to the obstacle.
-
+- We will be simultaneously using two sensors, corresponding to the front and rear sensors in a car.
 ---
 
 ## System Block Diagrams
