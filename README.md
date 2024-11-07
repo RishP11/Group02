@@ -71,3 +71,5 @@ The board interfaces with the microcontroller using two signal pins, `Trig` and 
 | 29/10/2024 | Initial plan formulation |
 
 Next Target: Getting the USs working with Tiva.
+
+![alt text](image-1.png)
