@@ -5,6 +5,14 @@
 * Ganesh Panduranga Karamsetty  - 210020009
 */
 
+/*
+ * Temporary Notes :
+ * R = 0x02
+ * B = 0x04
+ * G = 0x08
+ * Y = 0x0A
+ */
+
 #define STCTRL *((volatile long *) 0xE000E010)          // Control and Status
 #define STRELOAD *((volatile long *) 0xE000E014)        // Reload value
 #define STCURRENT *((volatile long *) 0xE000E018)       // Current value
@@ -20,7 +28,6 @@
 #include <stdbool.h>
 #include "tm4c123gh6pm.h"
 
-void Delay(float seconds);
 void trigUS( void ) ;
 void readEcho( void ) ;
 void PORTE_init( void ) ;
@@ -33,29 +40,21 @@ int main(void)
     PORTE_init() ;
     PORTF_init() ;
     while(1) {
-//        trigUS() ;
-////        Delay(0.05) ;       // Sample the distance every 0.05 seconds
-//        int count = 0 ;
-//        while(count < 400000){
-//            count += 1 ;
-        GPIO_PORTF_DATA_R = 0x05 ;
-        delay(0.5) ;
-        GPIO_PORTF_DATA_R = 0x02 ;
-        delay(0.5) ;
+        trigUS() ;
+        delay(0.05) ;                                   // Sample the distance every 0.05 seconds
     }
 }
 
 void delay(float seconds)
 {
     // Set up the GPTM for required delay
-    SYSCTL_RCGCWTIMER_R = 0x01 ;                      // Provide clock to timer 0
-    WTIMER0_CTL_R = 0x00 ;                           // Disable before configuring
-    WTIMER0_CFG_R = 0x04 ;                      // Select 32-bit individual mode
-    WTIMER0_TAMR_R = 0x01 ;                         // Timer and mode register
-    WTIMER0_TAILR_R = seconds * CLOCK_HZ ;                         // Interval Load register
-    WTIMER0_CTL_R |= 0x01 ;                            // Enable the timer
-//    WTIMER0_TAMATCHR_R = 0x00 ;
-    while((WTIMER0_RIS_R & 0x01) == 0);                  // Wait for timer to count down
+    SYSCTL_RCGCWTIMER_R = 0x01 ;                        // Provide clock to timer 0
+    WTIMER0_CTL_R = 0x00 ;                              // Disable before configuring
+    WTIMER0_CFG_R = 0x04 ;                              // Select 32-bit individual mode
+    WTIMER0_TAMR_R = 0x01 ;                             // Timer and mode register
+    WTIMER0_TAILR_R = seconds * CLOCK_HZ ;              // Interval Load register
+    WTIMER0_CTL_R |= 0x01 ;                             // Enable the timer
+    while((WTIMER0_RIS_R & 0x01) == 0);                 // Wait for timer to count down
     WTIMER0_ICR_R = 0x01 ;
 }
 
@@ -65,22 +64,25 @@ void readEcho( void )
     Interrupt Subroutine that gets called when a rising edge is detected on Echo Pin
     NOTE: Echo Pin is connected to PORT E Pins 1, 3.
     */
-    GPIO_PORTE_ICR_R = 0x0A ;                               // Clear the interrupt
-    // Using Systick to measure the duration of the pulse:
-    STRELOAD = MAX_RELOAD ;                              // Set reload value
+    GPIO_PORTE_ICR_R = 0x0A ;                           // Clear the interrupt
+    // Use Systick to measure the duration of the pulse:
+    STRELOAD = MAX_RELOAD ;                             // Set reload value
     STCURRENT = 0 ;                                     // Writing a dummy value to clear the count register and the count flag.
     STCTRL |= (CLKINT | ENABLE);                        // Set internal clock, enable the timer
     while (GPIO_PORTE_DATA_R & 0x02);                   // Wait until flag is set
-    STCTRL = 0 ;                                         // Stop the timer
+    STCTRL = 0 ;                                        // Stop the timer
     float time_us = 1.0 * (MAX_RELOAD - STCURRENT) / CLOCK_MHz ; // Time in microseconds
 
     // GPIO_PORTF_DATA = |...|SW1|G|B|R|SW2|
-    float estDist = time_us / 58 ;             // Estimate the distance
-    if  (estDist > 10){
-        GPIO_PORTF_DATA_R = 0x08 ;                          // Green LED On :: Distance > threshold
+    float estDist = time_us * 0.017 ;                      // Estimate the distance
+    if  (estDist >= 85){
+        GPIO_PORTF_DATA_R = 0x08 ;                      // Green LED On :: Distance > threshold
+    }
+    else if (10 <= estDist && estDist < 85){
+        GPIO_PORTF_DATA_R = 0x0A ;
     }
     else{
-        GPIO_PORTF_DATA_R = 0x02 ;                          // Red LED on :: Distance < threshold
+        GPIO_PORTF_DATA_R = 0x02 ;                      // Red LED on :: Distance < threshold
     }
     STCURRENT = 0 ;                                     // Writing a dummy value to clear the count register and the count flag.
 }
@@ -91,26 +93,10 @@ void trigUS( void )
     Function to send a single active high pulse of duration ~10 us.
     This is pulse is required to Trigger the Ultrasonic sensor.
     */
-    float trigPulseDuration_s = 10.0 / 1000000.0 ;          // Duration of 'Trig' Pulse
-    GPIO_PORTE_DATA_R |= 0x01 ;                             // Pulse high
-    Delay(trigPulseDuration_s);                             // Wait for Trig duration
-    GPIO_PORTE_DATA_R &= 0xFE ;                             //
-}
-
-void Delay(float seconds)
-{
-    /*
-    A simple Systick-Timer based delay function. Maximum delay this function can generate is
-    1.04 secs. Input the required delay in seconds.
-    */
-    unsigned long int count_top = CLOCK_HZ * seconds ;
-    STRELOAD = count_top ;                              // Set reload value
-    STCURRENT = 0 ;                                     // Write dummy value to clear the count register and count flag
-    STCTRL |= (CLKINT | ENABLE);                        // Set internal clock, enable the timer
-    while ((STCTRL & COUNT_FLAG) == 0) {                // Wait until flag is set
-        ;
-    }
-    STCTRL = 0;                                         // Stop the timer
+    float trigPulseDuration_s = 10.0 / 1000000.0 ;      // Duration of 'Trig' Pulse
+    GPIO_PORTE_DATA_R |= 0x01 ;                         // Pulse high
+    delay(trigPulseDuration_s);                         // Wait for Trig duration
+    GPIO_PORTE_DATA_R &= 0xFE ;                         // Pulse Low
 }
 
 void PORTF_init( void )
