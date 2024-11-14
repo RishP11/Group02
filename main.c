@@ -28,7 +28,7 @@ void PORTF_init( void ) ;
 void delay(float seconds) ;
 
 int main(void)
-/{
+{
     // Initializations:
     PORTE_init() ;
     PORTF_init() ;
@@ -38,9 +38,9 @@ int main(void)
 //        int count = 0 ;
 //        while(count < 400000){
 //            count += 1 ;
-        GPIO_PORTF_DATA_R = 0x02 ;
+        GPIO_PORTF_DATA_R = 0x05 ;
         delay(0.5) ;
-        GPIO_PORTF_DATA_R = 0x00 ;
+        GPIO_PORTF_DATA_R = 0x02 ;
         delay(0.5) ;
     }
 }
@@ -49,13 +49,14 @@ void delay(float seconds)
 {
     // Set up the GPTM for required delay
     SYSCTL_RCGCWTIMER_R = 0x01 ;                      // Provide clock to timer 0
-    NVIC_EN2_R |=  (1 << 30) ;
     WTIMER0_CTL_R = 0x00 ;                           // Disable before configuring
     WTIMER0_CFG_R = 0x04 ;                      // Select 32-bit individual mode
     WTIMER0_TAMR_R = 0x01 ;                         // Timer and mode register
     WTIMER0_TAILR_R = seconds * CLOCK_HZ ;                         // Interval Load register
     WTIMER0_CTL_R |= 0x01 ;                            // Enable the timer
-    while((WTIMER0_RIS_R & 0x01) != 0);                  // Wait for timer to count down
+//    WTIMER0_TAMATCHR_R = 0x00 ;
+    while((WTIMER0_RIS_R & 0x01) == 0);                  // Wait for timer to count down
+    WTIMER0_ICR_R = 0x01 ;
 }
 
 void readEcho( void )
