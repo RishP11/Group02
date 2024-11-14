@@ -13,7 +13,8 @@
 #define ENABLE      (1 << 0)                            // CSR[1] = enable the timer
 #define CLKINT      (1 << 2)                            // CSR[2] = clock source
 #define CLOCK_HZ    16000000                            // System Timer Clock Frequency
-#define MAX_RELOAD  16777215                            // Systick Timer counter maxed out (2**24 - 1)
+#define CLOCK_MHz   16
+#define MAX_RELOAD  16777215                            // Systick Timer counter max out value = 2**24 - 1
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -32,7 +33,12 @@ int main(void)
     PORTF_init() ;
     while(1) {
         trigUS() ;
-        Delay(0.05) ;
+//        Delay(0.05) ;       // Sample the distance every 0.05 seconds
+        int count = 0 ;
+        while(count < 400000){
+            count += 1 ;
+        }
+
     }
 }
 
@@ -43,18 +49,28 @@ void readEcho( void )
     NOTE: Echo Pin is connected to PORT E Pins 1, 3.
     */
     GPIO_PORTE_ICR_R = 0x0A ;                               // Clear the interrupt
-    int count = 0 ;
-    while(GPIO_PORTE_DATA_R & 0x02){
-        count += 1;                                         // TODO: Use a proper time capturer.
-    }
+//    int count = 0 ;
+//    while(GPIO_PORTE_DATA_R & 0x02){
+//        count += 1;                                         // TODO: Use a proper time capture.
+//    }
+//    float time_us = 1.0 * count / 16 ;
+    // Using Systick to measure the duration of the pulse:
+    STRELOAD = MAX_RELOAD ;                              // Set reload value
+    STCURRENT = 0 ;                                     // Writing a dummy value to clear the count register and the count flag.
+    STCTRL |= (CLKINT | ENABLE);                        // Set internal clock, enable the timer
+    while (GPIO_PORTE_DATA_R & 0x02);                   // Wait until flag is set
+    STCTRL = 0 ;                                         // Stop the timer
+    float time_us = 1.0 * (MAX_RELOAD - STCURRENT) / CLOCK_MHz ; // Time in microseconds
+
     // GPIO_PORTF_DATA = |...|SW1|G|B|R|SW2|
-    float Distance = (1.0 * count) / (16 * 58);             // Estimate the distance
-    if  (Distance > 10){
+    float estDist = time_us / 58 ;             // Estimate the distance
+    if  (estDist > 10){
         GPIO_PORTF_DATA_R = 0x08 ;                          // Green LED On :: Distance > threshold
     }
     else{
         GPIO_PORTF_DATA_R = 0x02 ;                          // Red LED on :: Distance < threshold
     }
+    STCURRENT = 0 ;                                     // Writing a dummy value to clear the count register and the count flag.
 }
 
 void trigUS( void )
@@ -76,10 +92,11 @@ void Delay(float seconds)
     1.04 secs. Input the required delay in seconds.
     */
     unsigned long int count_top = CLOCK_HZ * seconds ;
-STRELOAD = count_top ;                                  // Set reload value
+    STRELOAD = count_top ;                              // Set reload value
+    STCURRENT = 0 ;                                     // Write dummy value to clear the count register and count flag
     STCTRL |= (CLKINT | ENABLE);                        // Set internal clock, enable the timer
     while ((STCTRL & COUNT_FLAG) == 0) {                // Wait until flag is set
-        STRELOAD = 0;                                   // Do nothing
+        ;
     }
     STCTRL = 0;                                         // Stop the timer
 }
