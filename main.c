@@ -37,7 +37,7 @@ void PORTA_init( void );
 void PORTE_init( void ) ;
 void PORTF_init( void ) ;
 void delay(float seconds) ;
-void UART_setup( int baud_rate ) ;
+void UART_setup( void ) ;
 void UART_Tx( char data );
 char UART_Rx( void );
 void CLK_enable( void ) ;
@@ -46,9 +46,11 @@ int main(void)
 {
     // Initializations:
     CLK_enable() ;
-    UART_setup( 9600 ) ;
     PORTE_init() ;
     PORTF_init() ;
+    PORTA_init() ;
+    UART_setup() ;
+
     while(1) {
 //        trigUS() ;
 //        delay(0.05) ;                                   // Sample the distance every 0.05 seconds
@@ -100,14 +102,14 @@ char UART_Rx( void )
     }
 }
 
-void UART_setup( int baud_rate )
+void UART_setup( void )
 {
     UART0_CTL_R = 0x00 ;                                // Disable the UART
 
     // Calculations for the Baud Rate Divisor
     int UARTSysClk = CLOCK_HZ ;                         // Using system clock for UART module
     int clk_div = 16 ;
-//    int baud_rate = 9600 ;
+    int baud_rate = 9600 ;
 
     float BRD = (1.0 * UARTSysClk) / (clk_div * baud_rate) ;
     int BRDI = BRD ;
