@@ -24,6 +24,9 @@
 #define CLOCK_MHz   16
 #define MAX_RELOAD  16777215                            // Systick Timer counter max out value = 2**24 - 1
 
+#define safeDist    75
+#define cautionDist 20
+
 #include <stdint.h>
 #include <stdbool.h>
 #include "tm4c123gh6pm.h"
@@ -75,10 +78,10 @@ void readEcho( void )
 
     // GPIO_PORTF_DATA = |...|SW1|G|B|R|SW2|
     float estDist = time_us * 0.017 ;                      // Estimate the distance
-    if  (estDist >= 85){
+    if  (estDist >= safeDist){
         GPIO_PORTF_DATA_R = 0x08 ;                      // Green LED On :: Distance > threshold
     }
-    else if (10 <= estDist && estDist < 85){
+    else if (cautionDist <= estDist && estDist < safeDist){
         GPIO_PORTF_DATA_R = 0x0A ;
     }
     else{
