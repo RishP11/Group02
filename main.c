@@ -37,6 +37,8 @@ void PORTE_init( void ) ;
 void PORTF_init( void ) ;
 void delay(float seconds) ;
 void UART_setup( int baud_rate ) ;
+void UART_Tx( char data );
+char UART_Rx( void );
 
 int main(void)
 {
@@ -44,8 +46,27 @@ int main(void)
     PORTE_init() ;
     PORTF_init() ;
     while(1) {
-        trigUS() ;
-        delay(0.05) ;                                   // Sample the distance every 0.05 seconds
+//        trigUS() ;
+//        delay(0.05) ;                                   // Sample the distance every 0.05 seconds
+    }
+}
+
+void UART_Tx( char data )
+{
+    while((UART0_FR_R & (1 << 3)) != 0){
+        ;
+    }
+    UART0_DR_R = data ;
+}
+
+char UART_Rx( void )
+{
+    if ((UART0_FR_R & 0x40) != 0){
+        char rxData = UART0_DR_R ;
+        return rxData ;
+    }
+    else{
+        return 0x00 ;
     }
 }
 
