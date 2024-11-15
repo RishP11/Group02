@@ -39,11 +39,12 @@ void delay(float seconds) ;
 void UART_setup( int baud_rate ) ;
 void UART_Tx( char data );
 char UART_Rx( void );
+void CLK_Enable( void ) ;
 
 int main(void)
 {
     // Initializations:
-    UART_setup() ;
+    UART_setup( 9600 ) ;
     PORTE_init() ;
     PORTF_init() ;
     while(1) {
@@ -67,6 +68,14 @@ int main(void)
             UART_Tx(rxData) ;
         }
     }
+}
+
+void CLK_enable( void )
+{
+    SYSCTL_RCGCUART_R |= (1 << 0) ;
+    SYSCTL_RCGCWTIMER_R = 0x01 ;                        // Provide clock to timer 0
+    SYSCTL_RCGCGPIO_R |= 0x00000020;
+    SYSCTL_RCGCGPIO_R |= 0x00000010;                    // Enable clock to PORT_E
 }
 
 void UART_Tx( char data )
@@ -114,7 +123,6 @@ void UART_setup( int baud_rate )
 void delay(float seconds)
 {
     // Set up the GPTM for required delay
-    SYSCTL_RCGCWTIMER_R = 0x01 ;                        // Provide clock to timer 0
     WTIMER0_CTL_R = 0x00 ;                              // Disable before configuring
     WTIMER0_CFG_R = 0x04 ;                              // Select 32-bit individual mode
     WTIMER0_TAMR_R = 0x01 ;                             // Timer and mode register
@@ -172,7 +180,6 @@ void PORTF_init( void )
     LEDs as Outputs and Switches as Inputs
     */
     // GPIO_PORTF_DATA = |...|SW1|G|B|R|SW2|
-    SYSCTL_RCGCGPIO_R |= 0x00000020;
     GPIO_PORTF_LOCK_R = 0x4C4F434B ;                    // Unlock commit register
     GPIO_PORTF_CR_R = 0xF1 ;                            // Make PORT-F configurable
     GPIO_PORTF_DEN_R = 0x1F ;                           // Set PORT-F pins as digital pins
@@ -188,7 +195,6 @@ void PORTE_init( void )
     PE[0, 2] = Outputs --> Trig
     PE[1, 3] = Inputs  <-- Echo
     */
-    SYSCTL_RCGCGPIO_R |= 0x00000010;                    // Enable clock to PORT_E
     GPIO_PORTE_LOCK_R = 0x4C4F434B;                     // Unlock commit register
     GPIO_PORTE_CR_R = 0x01;                             // Make PORT_E0 configurable
     GPIO_PORTE_DEN_R = 0x0F;                            // 1 = digital; 0 = analog
