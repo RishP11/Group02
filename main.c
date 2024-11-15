@@ -36,6 +36,7 @@ void readEcho( void ) ;
 void PORTE_init( void ) ;
 void PORTF_init( void ) ;
 void delay(float seconds) ;
+void UART_setup( int baud_rate ) ;
 
 int main(void)
 {
@@ -46,6 +47,29 @@ int main(void)
         trigUS() ;
         delay(0.05) ;                                   // Sample the distance every 0.05 seconds
     }
+}
+
+void UART_setup( int baud_rate )
+{
+    UART0_CTL_R = 0x00 ;                                // Disable the UART
+
+    // Calculations for the Baud Rate Divisor
+    int UARTSysClk = CLOCK_HZ ;                         // Using system clock for UART module
+    int clk_div = 16 ;
+//    int baud_rate = 9600 ;
+
+    float BRD = (1.0 * UARTSysClk) / (clk_div * baud_rate) ;
+    int BRDI = BRD ;
+    BRD = BRD - BRDI ;
+    int BRDF = 64 * BRD + 0.5 ;
+
+    // Configuring the UART
+    UART0_IBRD_R = BRDI ;
+    UART0_FBRD_R = BRDF ;
+    UART0_LCRH_R |= (1 << 6) | (1 << 5) | (1 << 1) ;
+    UART0_CC_R = 0x00 ;
+    UART0_ECR_R = 0xFF ;
+    UART0_CTL_R |= (1 << 9) | (1 << 8) | (1 << 0) ;
 }
 
 void delay(float seconds)
@@ -77,7 +101,7 @@ void readEcho( void )
     float time_us = 1.0 * (MAX_RELOAD - STCURRENT) / CLOCK_MHz ; // Time in microseconds
 
     // GPIO_PORTF_DATA = |...|SW1|G|B|R|SW2|
-    float estDist = time_us * 0.017 ;                      // Estimate the distance
+    float estDist = 1.0 * time_us / 58 ;                      // Estimate the distance
     if  (estDist >= safeDist){
         GPIO_PORTF_DATA_R = 0x08 ;                      // Green LED On :: Distance > threshold
     }
