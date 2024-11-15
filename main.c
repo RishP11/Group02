@@ -43,11 +43,29 @@ char UART_Rx( void );
 int main(void)
 {
     // Initializations:
+    UART_setup() ;
     PORTE_init() ;
     PORTF_init() ;
     while(1) {
 //        trigUS() ;
 //        delay(0.05) ;                                   // Sample the distance every 0.05 seconds
+        char rxData = UART_Rx() ;
+        if (rxData == 'R'){
+            GPIO_PORTF_DATA_R = 0x02 ;
+            UART_Tx(rxData) ;
+        }
+        else if (rxData == 'G'){
+            GPIO_PORTF_DATA_R = 0x08 ;
+            UART_Tx(rxData) ;
+        }
+        else if (rxData == 'B'){
+            GPIO_PORTF_DATA_R = 0x04 ;
+            UART_Tx(rxData) ;
+        }
+        else if (rxData != 0){
+            GPIO_PORTF_DATA_R = 0x00 ;
+            UART_Tx(rxData) ;
+        }
     }
 }
 
