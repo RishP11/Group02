@@ -70,7 +70,7 @@ The board interfaces with the microcontroller using two signal pins, `Trig` and 
 |------------|--------------------------|
 | 29/10/2024 | <font color='lime'>Initial plan formulation |
 | 12/11/2024 | <font color='lime'>Able to detect and sense the distance using one US. |
-| Upcoming   | <font color='red'>Calibration of the distance |
-| Upcoming   | <font color='red'>Outputting the distance to PC monitor through UART serial|
+| 14/11/2024 | <font color='lime'>Calibration of the distance |
+| 15/11/2024 | <font color='red'>Outputting the distance to PC monitor through UART serial|
 | Upcoming   | <font color='red'>Integrate another sensor for the front | 
 

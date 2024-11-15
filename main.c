@@ -23,26 +23,32 @@
 #define CLOCK_HZ    16000000                                                    // System Timer Clock Frequency
 #define CLOCK_MHz   16
 #define MAX_RELOAD  16777215                                                    // Systick Timer counter max out value = 2**24 - 1
-
 #define safeDist    75
 #define cautionDist 20
+
+#define REAR        0
+#define FRONT       1
+
+int state = 0 ;
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
 #include "tm4c123gh6pm.h"
-//#include "auxilary_fn.h"
 
-void trigUS( void ) ;
-void readEcho( void ) ;
+// Initialisation fncs
+void CLK_enable( void ) ;
 void PORTA_init( void );
 void PORTE_init( void ) ;
 void PORTF_init( void ) ;
 void delay(float seconds) ;
+// Sensor-specific fncs
+void trigUS( void ) ;
+void readEcho( void ) ;
+// Comms fncs
 void UART_setup( void ) ;
 void UART_Tx( char data );
 char UART_Rx( void );
-void CLK_enable( void ) ;
 void UART_sendFloat(float value) ;
 
 int main(void)
@@ -55,6 +61,12 @@ int main(void)
     UART_setup() ;
 
     while(1) {
+        if (~(GPIO_PORTF_DATA_R) & 0x01){
+            state = FRONT ;
+        }
+        else if (~(GPIO_PORTF_DATA_R) & 0x10){
+            state = REAR ;
+        }
         trigUS() ;
         delay(0.05) ;                                                           // Sample the distance every 0.05 seconds
     }
@@ -120,7 +132,6 @@ void delay(float seconds)
     WTIMER0_TAILR_R = seconds * CLOCK_HZ ;                                          // Interval Load register
     WTIMER0_CTL_R |= 0x01 ;                                                         // Enable the timer
     while((WTIMER0_RIS_R & 0x01) == 0);                                             // Wait for timer to count down
-//    WTIMER0_ICR_R = 0x01 ;
 }
 
 void readEcho( void )
@@ -134,9 +145,18 @@ void readEcho( void )
     STRELOAD = MAX_RELOAD ;                             // Set reload value
     STCURRENT = 0 ;                                     // Writing a dummy value to clear the count register and the count flag.
     STCTRL |= (CLKINT | ENABLE);                        // Set internal clock, enable the timer
-    while (GPIO_PORTE_DATA_R & 0x02);                   // Wait until flag is set
-    STCTRL = 0 ;                                        // Stop the timer
-    float time_us = 1.0 * (MAX_RELOAD - STCURRENT) / CLOCK_MHz ; // Time in microseconds
+    float time_us ;
+    
+    if (state == 0){
+        while (GPIO_PORTE_DATA_R & 0x02);                   // Wait until flag is set
+        STCTRL = 0 ;                                        // Stop the timer
+        time_us = 1.0 * (MAX_RELOAD - STCURRENT) / CLOCK_MHz ; // Time in microseconds
+    }
+    else{
+        while (GPIO_PORTE_DATA_R & 0x08);                   // Wait until flag is set
+        STCTRL = 0 ;                                        // Stop the timer
+        time_us = 1.0 * (MAX_RELOAD - STCURRENT) / CLOCK_MHz ; // Time in microseconds
+    }
 
     // GPIO_PORTF_DATA = |...|SW1|G|B|R|SW2|
     float estDist = 1.0 * time_us / 58 ;                      // Estimate the distance
@@ -162,9 +182,16 @@ void trigUS( void )
     This is pulse is required to Trigger the Ultrasonic sensor.
     */
     float trigPulseDuration_s = 10.0 / 1000000.0 ;      // Duration of 'Trig' Pulse
-    GPIO_PORTE_DATA_R |= 0x01 ;                         // Pulse high
-    delay(trigPulseDuration_s);                         // Wait for Trig duration
-    GPIO_PORTE_DATA_R &= 0xFE ;                         // Pulse Low
+    if (state == 0){
+        GPIO_PORTE_DATA_R |= 0x01 ;                         // Pulse high
+        delay(trigPulseDuration_s);                         // Wait for Trig duration
+        GPIO_PORTE_DATA_R &= 0xFE ;                         // Pulse Low
+    }
+    else{
+        GPIO_PORTE_DATA_R |= 0x04 ;                         // Pulse high
+        delay(trigPulseDuration_s);                         // Wait for Trig duration
+        GPIO_PORTE_DATA_R &= 0xFB ;                         // Pulse Low
+    }
 }
 
 void PORTA_init( void )
@@ -207,7 +234,7 @@ void PORTE_init( void )
     GPIO_PORTE_IS_R = 0x00 ;                            // 1 = level ; 0 = edge
     GPIO_PORTE_IEV_R = 0x0A ;                           // 1 = Rising/ High; 0 = Falling/Low
     GPIO_PORTE_IM_R = 0x0A ;                            // 1 = Send interrupt; 0 = Do not send.
-    GPIO_PORTE_ICR_R = 0x0A ;                           // 1 = Clear interrupt.
+    GPIO_PORTE_ICR_R = 0xFF ;                           // 1 = Clear interrupt.
     NVIC_EN0_R |=  (1 << 4) ;                           // Enable interrupt for GPIO Port E
 }
 
@@ -216,7 +243,7 @@ void UART_sendFloat(float value) {
     int intPart = (int)value;                       // Integer part of the float
     int decPart = (int)((value - intPart) * 100);   // Decimal part (multiplied by 100)
 
-    char buffer[8];
+    char buffer[10];
     int i = 0 ;
     int j = 0 ;
 
