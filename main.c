@@ -33,17 +33,19 @@
 
 void trigUS( void ) ;
 void readEcho( void ) ;
+void PORTA_init( void );
 void PORTE_init( void ) ;
 void PORTF_init( void ) ;
 void delay(float seconds) ;
 void UART_setup( int baud_rate ) ;
 void UART_Tx( char data );
 char UART_Rx( void );
-void CLK_Enable( void ) ;
+void CLK_enable( void ) ;
 
 int main(void)
 {
     // Initializations:
+    CLK_enable() ;
     UART_setup( 9600 ) ;
     PORTE_init() ;
     PORTF_init() ;
@@ -74,7 +76,8 @@ void CLK_enable( void )
 {
     SYSCTL_RCGCUART_R |= (1 << 0) ;
     SYSCTL_RCGCWTIMER_R = 0x01 ;                        // Provide clock to timer 0
-    SYSCTL_RCGCGPIO_R |= 0x00000020;
+    SYSCTL_RCGCGPIO_R |= 0x00000001;
+    SYSCTL_RCGCGPIO_R |= 0x00000020;                    // PORTF
     SYSCTL_RCGCGPIO_R |= 0x00000010;                    // Enable clock to PORT_E
 }
 
@@ -171,6 +174,17 @@ void trigUS( void )
     GPIO_PORTE_DATA_R |= 0x01 ;                         // Pulse high
     delay(trigPulseDuration_s);                         // Wait for Trig duration
     GPIO_PORTE_DATA_R &= 0xFE ;                         // Pulse Low
+}
+
+void PORTA_init( void )
+{
+    GPIO_PORTA_LOCK_R = 0x4C4F434B ;
+    GPIO_PORTA_CR_R = 0xF1 ;
+    GPIO_PORTA_DEN_R = 0x03 ;
+    GPIO_PORTA_DIR_R = 0x02 ;
+    GPIO_PORTA_PUR_R = 0x02 ;
+    GPIO_PORTA_AFSEL_R = 0x03 ;
+    GPIO_PORTA_PCTL_R = 0x11 ;
 }
 
 void PORTF_init( void )
