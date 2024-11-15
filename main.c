@@ -13,23 +13,25 @@
  * Y = 0x0A
  */
 
-#define STCTRL *((volatile long *) 0xE000E010)          // Control and Status
-#define STRELOAD *((volatile long *) 0xE000E014)        // Reload value
-#define STCURRENT *((volatile long *) 0xE000E018)       // Current value
+#define STCTRL *((volatile long *) 0xE000E010)                                  // Control and Status
+#define STRELOAD *((volatile long *) 0xE000E014)                                // Reload value
+#define STCURRENT *((volatile long *) 0xE000E018)                               // Current value
 
-#define COUNT_FLAG  (1 << 16)                           // CSR[16] = Count Flag
-#define ENABLE      (1 << 0)                            // CSR[1] = enable the timer
-#define CLKINT      (1 << 2)                            // CSR[2] = clock source
-#define CLOCK_HZ    16000000                            // System Timer Clock Frequency
+#define COUNT_FLAG  (1 << 16)                                                   // CSR[16] = Count Flag
+#define ENABLE      (1 << 0)                                                    // CSR[1] = enable the timer
+#define CLKINT      (1 << 2)                                                    // CSR[2] = clock source
+#define CLOCK_HZ    16000000                                                    // System Timer Clock Frequency
 #define CLOCK_MHz   16
-#define MAX_RELOAD  16777215                            // Systick Timer counter max out value = 2**24 - 1
+#define MAX_RELOAD  16777215                                                    // Systick Timer counter max out value = 2**24 - 1
 
 #define safeDist    75
 #define cautionDist 20
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 #include "tm4c123gh6pm.h"
+//#include "auxilary_fn.h"
 
 void trigUS( void ) ;
 void readEcho( void ) ;
@@ -41,6 +43,7 @@ void UART_setup( void ) ;
 void UART_Tx( char data );
 char UART_Rx( void );
 void CLK_enable( void ) ;
+void UART_sendFloat(float value) ;
 
 int main(void)
 {
@@ -52,35 +55,18 @@ int main(void)
     UART_setup() ;
 
     while(1) {
-//        trigUS() ;
-//        delay(0.05) ;                                   // Sample the distance every 0.05 seconds
-        char rxData = UART_Rx() ;
-        if (rxData == 'R'){
-            GPIO_PORTF_DATA_R = 0x02 ;
-            UART_Tx(rxData) ;
-        }
-        else if (rxData == 'G'){
-            GPIO_PORTF_DATA_R = 0x08 ;
-            UART_Tx(rxData) ;
-        }
-        else if (rxData == 'B'){
-            GPIO_PORTF_DATA_R = 0x04 ;
-            UART_Tx(rxData) ;
-        }
-        else if (rxData != 0){
-            GPIO_PORTF_DATA_R = 0x00 ;
-            UART_Tx(rxData) ;
-        }
+        trigUS() ;
+        delay(0.05) ;                                                           // Sample the distance every 0.05 seconds
     }
 }
 
 void CLK_enable( void )
 {
     SYSCTL_RCGCUART_R |= (1 << 0) ;
-    SYSCTL_RCGCWTIMER_R = 0x01 ;                        // Provide clock to timer 0
+    SYSCTL_RCGCWTIMER_R = 0x01 ;                                                // Provide clock to timer 0
     SYSCTL_RCGCGPIO_R |= 0x00000001;
-    SYSCTL_RCGCGPIO_R |= 0x00000020;                    // PORTF
-    SYSCTL_RCGCGPIO_R |= 0x00000010;                    // Enable clock to PORT_E
+    SYSCTL_RCGCGPIO_R |= 0x00000020;                                            // PORTF
+    SYSCTL_RCGCGPIO_R |= 0x00000010;                                            // Enable clock to PORT_E
 }
 
 void UART_Tx( char data )
@@ -104,10 +90,10 @@ char UART_Rx( void )
 
 void UART_setup( void )
 {
-    UART0_CTL_R = 0x00 ;                                // Disable the UART
+    UART0_CTL_R = 0x00 ;                                                        // Disable the UART
 
     // Calculations for the Baud Rate Divisor
-    int UARTSysClk = CLOCK_HZ ;                         // Using system clock for UART module
+    int UARTSysClk = CLOCK_HZ ;                                                 // Using system clock for UART module
     int clk_div = 16 ;
     int baud_rate = 9600 ;
 
@@ -128,13 +114,13 @@ void UART_setup( void )
 void delay(float seconds)
 {
     // Set up the GPTM for required delay
-    WTIMER0_CTL_R = 0x00 ;                              // Disable before configuring
-    WTIMER0_CFG_R = 0x04 ;                              // Select 32-bit individual mode
-    WTIMER0_TAMR_R = 0x01 ;                             // Timer and mode register
-    WTIMER0_TAILR_R = seconds * CLOCK_HZ ;              // Interval Load register
-    WTIMER0_CTL_R |= 0x01 ;                             // Enable the timer
-    while((WTIMER0_RIS_R & 0x01) == 0);                 // Wait for timer to count down
-    WTIMER0_ICR_R = 0x01 ;
+    WTIMER0_CTL_R = 0x00 ;                                                          // Disable before configuring
+    WTIMER0_CFG_R = 0x04 ;                                                          // Select 32-bit individual mode
+    WTIMER0_TAMR_R = 0x01 ;                                                         // Timer and mode register
+    WTIMER0_TAILR_R = seconds * CLOCK_HZ ;                                          // Interval Load register
+    WTIMER0_CTL_R |= 0x01 ;                                                         // Enable the timer
+    while((WTIMER0_RIS_R & 0x01) == 0);                                             // Wait for timer to count down
+//    WTIMER0_ICR_R = 0x01 ;
 }
 
 void readEcho( void )
@@ -164,6 +150,9 @@ void readEcho( void )
         GPIO_PORTF_DATA_R = 0x02 ;                      // Red LED on :: Distance < threshold
     }
     STCURRENT = 0 ;                                     // Writing a dummy value to clear the count register and the count flag.
+
+    // Send the distance via UART
+    UART_sendFloat(estDist) ;
 }
 
 void trigUS( void )
@@ -220,4 +209,48 @@ void PORTE_init( void )
     GPIO_PORTE_IM_R = 0x0A ;                            // 1 = Send interrupt; 0 = Do not send.
     GPIO_PORTE_ICR_R = 0x0A ;                           // 1 = Clear interrupt.
     NVIC_EN0_R |=  (1 << 4) ;                           // Enable interrupt for GPIO Port E
+}
+
+void UART_sendFloat(float value) {
+    // Assuming the value has only 2 decimal places
+    int intPart = (int)value;                       // Integer part of the float
+    int decPart = (int)((value - intPart) * 100);   // Decimal part (multiplied by 100)
+
+    char buffer[8];
+    int i = 0 ;
+    int j = 0 ;
+
+    // Convert the integer part to string
+    if (intPart == 0) {
+        buffer[i++] = '0';  // Handle zero case
+    } else {
+        while (intPart > 0) {
+            buffer[i++] = '0' + (intPart % 10);   // Convert last digit to character
+            intPart /= 10;                        // Reduce the number
+        }
+
+        // Reverse the integer part
+        for (j = 0; j < i / 2; j++) {
+            char temp = buffer[j];
+            buffer[j] = buffer[i - j - 1];
+            buffer[i - j - 1] = temp;
+        }
+    }
+
+    // Add decimal point
+    buffer[i++] = '.';
+
+    // Convert the decimal part to string
+    buffer[i++] = '0' + (decPart / 10);  // Tens place of the decimal part
+    buffer[i++] = '0' + (decPart % 10);  // Ones place of the decimal part
+
+    // Null-terminate the string
+    buffer[i++] = ' ';
+    buffer[i++] = 'c';
+    buffer[i++] = 'm';
+
+    for (i = 0 ; i < 20 ; i++){
+        UART_Tx(buffer[i]) ;
+        delay(0.001) ;
+    }
 }
