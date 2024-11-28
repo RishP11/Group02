@@ -20,7 +20,7 @@
 #define COUNT_FLAG  (1 << 16)                                                   // CSR[16] = Count Flag
 #define ENABLE      (1 << 0)                                                    // CSR[1] = enable the timer
 #define CLKINT      (1 << 2)                                                    // CSR[2] = clock source
-#define CLOCK_HZ    16000000                                                    // System Timer Clock Frequency
+#define SYSCLK_HZ    16000000                                                    // System Timer Clock Frequency
 #define CLOCK_MHz   16
 #define MAX_RELOAD  16777215                                                    // Systick Timer counter max out value = 2**24 - 1
 #define safeDist    75
@@ -105,7 +105,7 @@ void UART_setup( void )
     UART0_CTL_R = 0x00 ;                                                        // Disable the UART
 
     // Calculations for the Baud Rate Divisor
-    int UARTSysClk = CLOCK_HZ ;                                                 // Using system clock for UART module
+    int UARTSysClk = SYSCLK_HZ ;                                                 // Using system clock for UART module
     int clk_div = 16 ;
     int baud_rate = 9600 ;
 
@@ -129,7 +129,7 @@ void delay(float seconds)
     WTIMER0_CTL_R = 0x00 ;                                                          // Disable before configuring
     WTIMER0_CFG_R = 0x04 ;                                                          // Select 32-bit individual mode
     WTIMER0_TAMR_R = 0x01 ;                                                         // Timer and mode register
-    WTIMER0_TAILR_R = seconds * CLOCK_HZ ;                                          // Interval Load register
+    WTIMER0_TAILR_R = seconds * SYSCLK_HZ ;                                          // Interval Load register
     WTIMER0_CTL_R |= 0x01 ;                                                         // Enable the timer
     while((WTIMER0_RIS_R & 0x01) == 0);                                             // Wait for timer to count down
 }
