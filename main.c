@@ -12,6 +12,11 @@
  * G = 0x08
  * Y = 0x0A
  */
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include "tm4c123gh6pm.h"
+#include "ssd1306_driver.h"
 
 #define STCTRL *((volatile long *) 0xE000E010)                                  // Control and Status
 #define STRELOAD *((volatile long *) 0xE000E014)                                // Reload value
@@ -31,14 +36,9 @@
 
 int state = 0 ;
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
-#include "tm4c123gh6pm.h"
-
 // Initialisation fncs
 void CLK_enable( void ) ;
-void PORTA_init( void );
+void PORTA_init( void ) ; 
 void PORTE_init( void ) ;
 void PORTF_init( void ) ;
 void delay(float seconds) ;
@@ -55,10 +55,16 @@ int main(void)
 {
     // Initializations:
     CLK_enable() ;
+    I2C_enable() ;
+    I2C3_setup() ;
+    PORTD_init() ;
     PORTE_init() ;
     PORTF_init() ;
     PORTA_init() ;
     UART_setup() ;
+
+    oled_init() ;
+    oledClear() ;
 
     while(1) {
         if (~(GPIO_PORTF_DATA_R) & 0x01){
@@ -172,7 +178,17 @@ void readEcho( void )
     STCURRENT = 0 ;                                     // Writing a dummy value to clear the count register and the count flag.
 
     // Send the distance via UART
+    I2C3_Tx(OLED_COMMAND, 0xB0) ;
+    if (state)
+        oledPrintStr("Front :") ;
+    else{
+        oledPrintStr("Rear : ") ;
+    }
+    I2C3_Tx(OLED_COMMAND, 0xB1) ;
     UART_sendFloat(estDist) ;
+    char dist[10] = "        cm" ;
+    num2str(estDist, dist, 2) ;
+    oledPrintStr(dist) ;
 }
 
 void trigUS( void )
