@@ -12,9 +12,9 @@
 ### Project Plan
 
 - Use the **TI TM4C123GH6PM microcontroller** to read and operate two ultrasonic sensors.
-- Output the distance readings to the OLED SSD1306 128 * 64 via I2C interface.
-- Blink an onboard LED at a frequency inversely proportional to the distance to the obstacle.
-- We will be simultaneously using two sensors, corresponding to the front and rear sensors in a car.
+- Output the distance readings to the OLED SSD1306 (128 * 64) via I2C interface.
+- Use on-board led and implement color signalling.
+- The two sensors, corresponding to the front and rear sensors in a car will be operated depending on which switch is pressed. Analogous to whether the car is in forward gear or reverse gear. 
 ---
 
 ## Project Description
@@ -57,24 +57,26 @@ The board interfaces with the microcontroller using two signal pins, `Trig` and 
 ![Software Block Diagram](Images/software.svg)
 
 ---
+### NOTE: The OLED driver/ library has been designed by us from scratch with a bit of reverse engineering and referring to the datasheet. Hence, I strongly suggest you use the functions implemented in it with care as they are very much in developmental stage.
+---
 
 ## Materials and Datasheets
 
 | Material | Link to Datasheet |
 |----------|-------------------| 
 |Tiva C series TM4C123G LaunchPad | [TM4C123GH6PM Datasheet](https://www.ti.com/product/TM4C123GH6PM) |
-| HC-SR04 | [HC-SR04 User Manual](https://robu.in/wp-content/uploads/2014/08/edited_HC-SR04-User-Manual-1.pdf)      |
-| OLED ADDDDDDDDDDDDDDDDDD| 
+| HC-SR04 | [HC-SR04 User Manual](https://robu.in/wp-content/uploads/2014/08/edited_HC-SR04-User-Manual-1.pdf) |
+| 0.96in OLED with SSD1306 driver (128×64) | [SSD1306 Datasheet](https://cdn-shop.adafruit.com/datasheets/SSD1306.pdf) | 
 
 ---
 
 ## Timeline
 
-| Date       | Milestone                |
+| Date       | Milestone Reached |
 |------------|--------------------------|
 | 29/10/2024 | <font color='lime'>Initial plan formulation |
 | 12/11/2024 | <font color='lime'>Able to detect and sense the distance using one US. |
 | 14/11/2024 | <font color='lime'>Calibration of the distance |
 | 15/11/2024 | <font color='lime'>Outputting the distance to PC monitor through UART serial|
 | 17/11/2024 | <font color='lime'>Integrate another sensor for the front | 
-
+| 28/11/2024 | <font color='lime'> Output distance to OLED
