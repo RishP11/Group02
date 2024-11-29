@@ -1,6 +1,9 @@
 # Ultrasonic Sensor-Based Parking Assist System
 
-**Course:** EE 615 Embedded Systems Lab  
+**Course:** EE 615 Embedded Systems Lab 
+
+**Instructor:** Prof. Abhijit Kshirsagar
+
 **Group 02 Members:**  
 1. Ganesh Panduranga Karamsetty - 210020009  
 2. Rishabh Pomaje - 210020036  
@@ -9,7 +12,7 @@
 ### Project Plan
 
 - Use the **TI TM4C123GH6PM microcontroller** to read and operate two ultrasonic sensors.
-- Output the distance readings to the PC via serial UART.
+- Output the distance readings to the OLED SSD1306 128 * 64 via I2C interface.
 - Blink an onboard LED at a frequency inversely proportional to the distance to the obstacle.
 - We will be simultaneously using two sensors, corresponding to the front and rear sensors in a car.
 ---
