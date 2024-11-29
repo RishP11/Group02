@@ -6,28 +6,28 @@
 */
 
 /*
- * Temporary Notes :
- * R = 0x02
- * B = 0x04
- * G = 0x08
- * Y = 0x0A
- */
+* Temporary Notes :
+* R = 0x02
+* B = 0x04
+* G = 0x08
+* Y = 0x0A
+*/
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
 #include "tm4c123gh6pm.h"
 #include "ssd1306_driver.h"
 
-#define STCTRL *((volatile long *) 0xE000E010)                                  // Control and Status
-#define STRELOAD *((volatile long *) 0xE000E014)                                // Reload value
-#define STCURRENT *((volatile long *) 0xE000E018)                               // Current value
+#define STCTRL *((volatile long *) 0xE000E010)                     // Control and Status
+#define STRELOAD *((volatile long *) 0xE000E014)                   // Reload value
+#define STCURRENT *((volatile long *) 0xE000E018)                  // Current value
 
-#define COUNT_FLAG  (1 << 16)                                                   // CSR[16] = Count Flag
-#define ENABLE      (1 << 0)                                                    // CSR[1] = enable the timer
-#define CLKINT      (1 << 2)                                                    // CSR[2] = clock source
-#define SYSCLK_HZ   16000000                                                    // System Timer Clock Frequency
+#define COUNT_FLAG  (1 << 16)                                      // CSR[16] = Count Flag
+#define ENABLE      (1 << 0)                                       // CSR[1] = enable the timer
+#define CLKINT      (1 << 2)                                       // CSR[2] = clock source
+#define SYSCLK_HZ   16000000                                       // System Timer Clock Frequency
 #define CLOCK_MHz   16
-#define MAX_RELOAD  16777215                                                    // Systick Timer counter max out value = 2**24 - 1
+#define MAX_RELOAD  16777215                                       // Systick Timer counter max out value = 2**24 - 1
 #define safeDist    75
 #define cautionDist 20
 
@@ -142,9 +142,9 @@ char UART_Rx( void )
     else{
         return 0x00 ;                               
     }
-}
+    }
 
-void UART_sendFloat(float value) {
+    void UART_sendFloat(float value) {
     int intPart = ( int ) value ;                       // Integer part of the float
     int decPart = ( int )( (value - intPart) * 100) ;   // Decimal part (multiplied by 100)
 
@@ -217,7 +217,7 @@ void readEcho( void )
     STRELOAD = MAX_RELOAD ;                                     // Set reload value
     STCURRENT = 0 ;                                             // Writing a dummy value to clear the count register and the count flag.
     STCTRL |= (CLKINT | ENABLE);                                // Set internal clock, enable the timer
-    
+
     float time_us ;
     if (state == 0){
         while (GPIO_PORTE_DATA_R & 0x02);                       // Wait until flag is set
