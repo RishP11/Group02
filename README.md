@@ -90,4 +90,4 @@ Here is a demo picture of the system:
 
 And here is the demo video:
 
-[Demo Video](Images/demo_video.mp4?raw=true)
+[Demo Video](Images/demo_movie.mp4?raw=true)
