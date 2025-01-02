@@ -90,5 +90,4 @@ Here is a demo picture of the system:
 
 And here is the demo video:
 
-<!-- ! [Demo Video](Images/demo_movie.mp4?raw=true) -->
-<video controls src="Images/demo_movie.mp4" title="Title"></video>
+![Demo Video](Images/demo_movie.mp4?raw=true)
