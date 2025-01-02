@@ -80,3 +80,14 @@ The board interfaces with the microcontroller using two signal pins, `Trig` and 
 | 15/11/2024 | <font color='lime'>Outputting the distance to PC monitor through UART serial|
 | 17/11/2024 | <font color='lime'>Integrate another sensor for the front | 
 | 28/11/2024 | <font color='lime'> Output distance to OLED
+
+---
+
+## Demo
+Here is a demo picture of the system:
+
+![Demo Picture](Images/demo_pic.jpg?raw=true)
+
+And here is the demo video:
+
+[Demo Video](Images/demo_video.mp4?raw=true)
